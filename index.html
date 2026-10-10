@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>烏龜日誌</title>
 <style>
 :root{--bg:#eef4ef;--panel:#fff;--ink:#17302f;--mut:#5d7775;--line:#d3e0da;--moss:#3f8a4f;--sun:#e39a12;--water:#2f7f86;--warn:#b84a2a;--hex:#dbe8e2;
@@ -10,24 +10,25 @@ font-family:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e2427;--panel:#16363a;--ink:#e6f1ee;--mut:#90b0ac;--line:#25494d;--moss:#7fc08a;--sun:#f2b441;--water:#5cb6bd;--hex:#1f464a}}
 :root[data-theme="dark"]{--bg:#0e2427;--panel:#16363a;--ink:#e6f1ee;--mut:#90b0ac;--line:#25494d;--moss:#7fc08a;--sun:#f2b441;--water:#5cb6bd;--hex:#1f464a}
 *{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overflow-x:hidden}
-body::before{content:"";position:fixed;inset:-20% -10% auto;height:60%;background:radial-gradient(ellipse at 30% 0,color-mix(in srgb,var(--water) 28%,transparent),transparent 65%);pointer-events:none;animation:drift 14s ease-in-out infinite alternate}
-@keyframes drift{to{transform:translateX(8%) scale(1.1)}}
-.wrap{position:relative;max-width:480px;margin:0 auto;padding:16px 16px 70px}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{margin:0;background:var(--bg);color:var(--ink);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);position:fixed;inset:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body::before{content:"";position:fixed;inset:-20% -10% auto;height:60%;background:radial-gradient(ellipse at 30% 0,color-mix(in srgb,var(--water) 28%,transparent),transparent 65%);pointer-events:none}
+.wrap{position:relative;max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+.head{flex:none;padding:12px 16px 4px;border-bottom:1px solid var(--line);background:var(--bg)}
+.scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 16px calc(40px + env(safe-area-inset-bottom,0px))}
 button{font:inherit;color:inherit;cursor:pointer;transition:transform .12s,background .2s,border-color .2s}
 button:active{transform:scale(.95)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--water);outline-offset:2px}
-input,textarea{font:inherit;color:var(--ink);width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:15px}
+input,textarea{font:inherit;color:var(--ink);width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px}
 textarea{resize:vertical;min-height:60px}
 .top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .top h1{margin:0;font-size:22px;font-weight:800;letter-spacing:1px;flex:1}
 .swim{width:44px;animation:bob 3.4s ease-in-out infinite}
-.swim .fl{transform-origin:50% 50%;animation:paddle 1.4s ease-in-out infinite}
+
 @keyframes bob{50%{transform:translateY(-4px) rotate(-3deg)}}
 @keyframes paddle{50%{transform:rotate(14deg)}}
-.ic{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:16px}
-.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.ic{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:16px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none;overscroll-behavior-x:contain}
 .chip{flex:none;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);font-size:14px;white-space:nowrap}
 .chip.on{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:600}
 .chip.ghost{border-style:dashed;color:var(--water);border-color:var(--water);background:transparent}
@@ -44,15 +45,15 @@ textarea{resize:vertical;min-height:60px}
 .hx text{font-size:20px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
 .stats{display:flex;gap:16px;margin-top:12px;font-size:13px;color:var(--mut)}
 .stats b{display:block;font-size:20px;color:var(--ink)}
-.datebar{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px}
+.datebar{display:flex;align-items:center;justify-content:space-between;margin:2px 0 4px}
 .datebar strong{font-size:17px}
-.datebar button{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel)}
+.datebar button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel)}
 .datebar button:disabled{opacity:.3}
 .sec{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
 .f{margin-bottom:16px}.f:last-child{margin-bottom:0}
 .f>label,.lab{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
 .step{display:flex;align-items:center;gap:14px}
-.step button{width:42px;height:42px;border-radius:12px;border:1.5px solid var(--moss);background:transparent;font-size:22px;color:var(--moss)}
+.step button{width:46px;height:46px;border-radius:12px;border:1.5px solid var(--moss);background:transparent;font-size:22px;color:var(--moss)}
 .step output{font-size:28px;font-weight:800;min-width:40px;text-align:center;display:inline-block}
 .step output.pop{animation:pop .3s}
 @keyframes pop{40%{transform:scale(1.35)}}
@@ -78,7 +79,7 @@ textarea{resize:vertical;min-height:60px}
 .hist .x{border:0;background:transparent;color:var(--mut);font-size:18px;padding:6px}
 .empty{color:var(--mut);font-size:13px;margin:0}
 .ov{position:fixed;inset:0;background:rgba(5,20,22,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20;animation:fade .2s}
-.md{background:var(--panel);width:100%;max-width:480px;max-height:88%;overflow:auto;border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));animation:up .3s cubic-bezier(.2,.9,.3,1)}
+.md{background:var(--panel);width:100%;max-width:480px;max-height:88%;overflow:auto;overscroll-behavior:contain;border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));animation:up .3s cubic-bezier(.2,.9,.3,1)}
 .md h3{margin:0 0 14px;font-size:17px}
 .md .acts{display:flex;gap:10px;margin-top:14px}.md .acts button{flex:1}
 .rp{margin-bottom:16px;padding-left:12px;border-left:4px solid var(--sun);font-size:14px;line-height:1.8}
@@ -94,6 +95,7 @@ textarea{resize:vertical;min-height:60px}
 </head>
 <body>
 <div class="wrap">
+  <div class="head">
   <div class="top">
     <svg class="swim" viewBox="0 0 64 48" aria-hidden="true"><g class="fl"><ellipse cx="14" cy="34" rx="9" ry="4.5" fill="#6aa86f"/><ellipse cx="46" cy="36" rx="9" ry="4.5" fill="#6aa86f"/></g><circle cx="56" cy="22" r="7" fill="#6aa86f"/><circle cx="58" cy="20" r="1.4" fill="#17302f"/><ellipse cx="30" cy="24" rx="22" ry="15" fill="#3f8a4f"/><path d="M18 24h24M30 10v28M20 15l20 18M40 15L20 33" stroke="#2c6a3a" stroke-width="1.6" fill="none"/></svg>
     <h1>烏龜日誌</h1>
@@ -101,17 +103,17 @@ textarea{resize:vertical;min-height:60px}
     <button class="ic" id="bkBtn" aria-label="備份同匯入">💾</button>
   </div>
   <div class="chips" id="bar"></div>
-
-  <div class="shell">
-    <h2>最近 7 日曬太陽</h2>
-    <div class="hexrow" id="hexes"></div>
-    <div class="stats" id="stats"></div>
-  </div>
-
   <div class="datebar">
     <button id="prev" aria-label="前一日">‹</button>
     <strong id="dlabel"></strong>
     <button id="next" aria-label="後一日">›</button>
+  </div>
+  </div>
+  <main class="scroll">
+  <div class="shell">
+    <h2>最近 7 日曬太陽</h2>
+    <div class="hexrow" id="hexes"></div>
+    <div class="stats" id="stats"></div>
   </div>
 
   <div class="sec">
@@ -140,6 +142,7 @@ textarea{resize:vertical;min-height:60px}
     <div id="hist"></div>
   </div>
   <button class="btn alt" id="editT">編輯／刪除目前烏龜</button>
+  </main>
 </div>
 
 <script>
@@ -149,7 +152,8 @@ var $=function(s){return document.querySelector(s)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
 function ld(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
 var S=ld(K,null);
-if(!S){S={turtles:ld('turtles',[]),logs:ld('turtle_logs',{}),active:null,shown:{},theme:'auto'};}
+if(!S){var oL=ld('turtle_logs',{}),nL={};Object.keys(oL).forEach(function(id){nL[id]={};Object.keys(oL[id]||{}).forEach(function(d){var o=oL[id][d]||{};nL[id][d]=Object.assign(blank(),{feed:o.feedCount||0,amount:o.amount||'',other:o.food||'',sun:o.sun===true?true:o.sun===false?false:null,dur:o.duration==null?'':o.duration})})});
+  S={turtles:ld('turtles',[]),logs:nL,active:null,shown:{},theme:'auto'};}
 if(!S.turtles.length)S.turtles.push({id:'t'+Date.now(),name:'我的烏龜',gender:'未知'});
 if(!S.turtles.some(function(t){return t.id===S.active}))S.active=S.turtles[0].id;
 S.shown=S.shown||{};
@@ -178,7 +182,7 @@ $('#bar').onclick=function(e){var b=e.target.closest('button');if(!b)return;
   S.active=b.dataset.id;persist();renderAll()};
 $('#editT').onclick=function(){turtleModal(T())};
 function turtleModal(t){
-  var g=t?t.gender:'未知';
+  commit();var g=t?t.gender:'未知';
   modal('<h3>'+(t?'編輯烏龜':'新增烏龜')+'</h3><div class="f"><label>名稱</label><input id="tn" maxlength="12" value="'+esc(t?t.name:'')+'" placeholder="例如：阿寶"></div><div class="f"><span class="lab">性別</span><div class="seg" id="tg">'+['未知','公','乸'].map(function(x){return '<button data-g="'+x+'" class="'+(x===g?'on':'')+'">'+x+'</button>'}).join('')+'</div></div><div class="acts"><button class="btn alt" data-x>取消</button>'+(t&&S.turtles.length>1?'<button class="btn bad" id="tdel">刪除</button>':'')+'<button class="btn" id="tok">儲存</button></div>');
   $('#tg').onclick=function(e){var b=e.target.closest('button');if(!b)return;g=b.dataset.g;[].forEach.call($('#tg').children,function(x){x.classList.toggle('on',x===b)})};
   $('#tok').onclick=function(){var n=$('#tn').value.trim();if(!n){$('#tn').focus();return toast('請輸入烏龜名稱')}
@@ -210,12 +214,14 @@ function paintSun(){
   $('#durchips').innerHTML=DURS.map(function(m){return '<button class="tag'+(+cur.dur===m?' on':'')+'" data-d="'+m+'">'+m+' 分</button>'}).join('');
 }
 function paintWater(){$('#wY').className=cur.water?'on':''}
-function touch(){clearTimeout(tm);tm=setTimeout(function(){
-  if(!S.logs[S.active])S.logs[S.active]={};
-  S.logs[S.active][date]=Object.assign({},cur,{t:Date.now()});
+var pend=null;
+function commit(){clearTimeout(tm);if(!pend)return;var p=pend;pend=null;
+  if(!S.logs[p.id])S.logs[p.id]={};
+  S.logs[p.id][p.d]=p.e;
   var ok=persist();
   $('#saved').textContent=ok?'已自動儲存 ✓ '+new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'}):'⚠️ 無法儲存到瀏覽器，請用右上角 💾 備份';
-  renderShell();renderHist()},300)}
+  renderShell(false);renderHist()}
+function touch(){pend={id:S.active,d:date,e:Object.assign({},cur,{foods:cur.foods.slice(),t:Date.now()})};clearTimeout(tm);tm=setTimeout(commit,500)}
 document.querySelectorAll('[data-feed]').forEach(function(b){b.onclick=function(){
   cur.feed=Math.max(0,Math.min(30,cur.feed+(+b.dataset.feed)));var o=$('#feed');o.textContent=cur.feed;o.classList.remove('pop');void o.offsetWidth;o.classList.add('pop');touch()}});
 $('#foods').onclick=function(e){var b=e.target.closest('button');if(!b)return;var f=b.dataset.f,i=cur.foods.indexOf(f);if(i>-1)cur.foods.splice(i,1);else cur.foods.push(f);paintFoods();touch()};
@@ -235,13 +241,13 @@ $('#prev').onclick=function(){date=shift(date,-1);renderAll()};
 $('#next').onclick=function(){if(date<today()){date=shift(date,1);renderAll()}};
 
 /* shell chart + stats */
-function renderShell(){
+function renderShell(anim){
   var L=logs(),td=today(),h='',i,d,e,cls,txt,max=0;
   for(i=6;i>=0;i--){d=shift(td,-i);e=L[d];
     cls=e&&e.sun===true?'sun':e&&e.sun===false?'no':'';txt=e&&e.sun===true?(e.dur||'✓'):'';
-    h+='<div class="hx '+cls+(d===date?' cur':'')+'" data-d="'+d+'" style="transition-delay:'+(6-i)*60+'ms"><svg viewBox="0 0 60 66"><polygon points="30,3 57,17 57,49 30,63 3,49 3,17"/><text x="30" y="34">'+txt+'</text></svg>'+wd(d)+'</div>'}
+    h+='<div class="hx '+cls+(d===date?' cur':'')+(anim?'':' in')+'" data-d="'+d+'"'+(anim?' style="transition-delay:'+(6-i)*60+'ms"':'')+'><svg viewBox="0 0 60 66"><polygon points="30,3 57,17 57,49 30,63 3,49 3,17"/><text x="30" y="34">'+txt+'</text></svg>'+wd(d)+'</div>'}
   $('#hexes').innerHTML=h;
-  requestAnimationFrame(function(){requestAnimationFrame(function(){document.querySelectorAll('.hx').forEach(function(x){x.classList.add('in')})})});
+  if(anim)requestAnimationFrame(function(){requestAnimationFrame(function(){document.querySelectorAll('.hx').forEach(function(x){x.classList.add('in')})})});
   var streak=0;d=td;if(!(L[d]&&L[d].sun===true))d=shift(d,-1);
   while(L[d]&&L[d].sun===true){streak++;d=shift(d,-1)}
   var tot=0,n=0;for(i=0;i<7;i++){e=L[shift(td,-i)];if(e&&e.sun===true){tot+=+e.dur||0;n++}}
@@ -259,7 +265,7 @@ function renderHist(){
     return '<div class="hist"><div class="b" data-d="'+d+'"><b>'+d+'（週'+wd(d)+'）</b><br><span>餵 '+(e.feed||0)+' 次'+(f?'・'+esc(f):'')+'・'+sunTxt(e)+(e.water?'・已換水':'')+(e.weight!==''&&e.weight!=null?'・'+e.weight+'g':'')+'</span></div><button class="x" data-del="'+d+'" aria-label="刪除">✕</button></div>'}).join(''):'<p class="empty">未有記錄。揀返上面日期，填第一筆就會喺度出現。</p>';
 }
 $('#hist').onclick=function(e){var x=e.target.closest('[data-del]');
-  if(x){if(x.dataset.sure){delete S.logs[S.active][x.dataset.del];persist();renderAll();toast('已刪除記錄')}else{x.dataset.sure=1;x.textContent='確認?';x.style.color='var(--warn)'}return}
+  if(x){if(x.dataset.sure){commit();delete S.logs[S.active][x.dataset.del];persist();renderAll();toast('已刪除記錄')}else{x.dataset.sure=1;x.textContent='確認?';x.style.color='var(--warn)'}return}
   var b=e.target.closest('[data-d]');if(b){date=b.dataset.d;renderAll();window.scrollTo({top:0,behavior:'smooth'})}};
 
 /* report */
@@ -275,13 +281,13 @@ function reportModal(d,all){
     return '<div class="rp"><b>'+esc(l[0])+'</b>'+l.slice(1).map(esc).join('<br>')+'</div>'}).join('')+'<div class="acts"><button class="btn alt" data-x>關閉</button><button class="btn" id="cp">複製文字</button></div>';
   modal(h);$('#cp').onclick=function(){copy(txt.join('\n'),'已複製日報')};
 }
-$('#repBtn').onclick=function(){reportModal(date,false)};
+$('#repBtn').onclick=function(){commit();reportModal(date,false)};
 function copy(s,msg){
   function fb(){var t=document.createElement('textarea');t.value=s;document.body.appendChild(t);t.select();try{document.execCommand('copy');toast(msg)}catch(e){toast('請手動複製')}t.remove()}
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(function(){toast(msg)},fb);else fb()}
 
 /* backup */
-$('#bkBtn').onclick=function(){
+$('#bkBtn').onclick=function(){commit();
   modal('<h3>備份同匯入</h3><p class="empty" style="margin-bottom:10px">複製下面文字存起，換手機或清除瀏覽器資料後貼返入嚟就可以還原。匯入會覆蓋目前資料。</p><textarea id="bk" style="min-height:140px;font-size:12px">'+esc(JSON.stringify({turtles:S.turtles,logs:S.logs}))+'</textarea><div class="acts"><button class="btn alt" id="bkc">複製</button><button class="btn" id="bki">匯入</button></div>');
   $('#bkc').onclick=function(){copy($('#bk').value,'已複製備份')};
   $('#bki').onclick=function(){try{var o=JSON.parse($('#bk').value);if(!Array.isArray(o.turtles)||!o.turtles.length||typeof o.logs!=='object')throw 0;
@@ -291,10 +297,11 @@ $('#bkBtn').onclick=function(){
 function tick(){var n=new Date(),td=ymd(n);
   if(td!==lastDay){if(date===lastDay)date=td;lastDay=td;renderAll()}
   if(n.getHours()>=22&&!S.shown[td]&&!$('#ov')){S.shown[td]=1;
-    Object.keys(S.shown).forEach(function(k){if(k<shift(td,-30))delete S.shown[k]});persist();reportModal(td,true)}}
-setInterval(tick,20000);document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});
+    Object.keys(S.shown).forEach(function(k){if(k<shift(td,-30))delete S.shown[k]});commit();persist();reportModal(td,true)}}
+setInterval(tick,20000);document.addEventListener('visibilitychange',function(){if(document.hidden)commit();else tick()});window.addEventListener('pagehide',commit);
+document.addEventListener('focusin',function(e){var t=e.target;if(t.matches&&t.matches('input,textarea')&&!t.closest('.md'))setTimeout(function(){t.scrollIntoView({block:'center'})},300)});
 
-function renderAll(){applyTheme();renderBar();paintDate();fill();renderShell();renderHist()}
+function renderAll(){commit();applyTheme();renderBar();paintDate();fill();renderShell(true);renderHist()}
 renderAll();tick();
 </script>
 </body>
