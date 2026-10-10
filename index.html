@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>烏龜日誌</title>
+<style>
+:root{--bg:#eef4ef;--panel:#fff;--ink:#17302f;--mut:#5d7775;--line:#d3e0da;--moss:#3f8a4f;--sun:#e39a12;--water:#2f7f86;--warn:#b84a2a;--hex:#dbe8e2;
+font-family:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e2427;--panel:#16363a;--ink:#e6f1ee;--mut:#90b0ac;--line:#25494d;--moss:#7fc08a;--sun:#f2b441;--water:#5cb6bd;--hex:#1f464a}}
+:root[data-theme="dark"]{--bg:#0e2427;--panel:#16363a;--ink:#e6f1ee;--mut:#90b0ac;--line:#25494d;--moss:#7fc08a;--sun:#f2b441;--water:#5cb6bd;--hex:#1f464a}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-20% -10% auto;height:60%;background:radial-gradient(ellipse at 30% 0,color-mix(in srgb,var(--water) 28%,transparent),transparent 65%);pointer-events:none;animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translateX(8%) scale(1.1)}}
+.wrap{position:relative;max-width:480px;margin:0 auto;padding:16px 16px 70px}
+button{font:inherit;color:inherit;cursor:pointer;transition:transform .12s,background .2s,border-color .2s}
+button:active{transform:scale(.95)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--water);outline-offset:2px}
+input,textarea{font:inherit;color:var(--ink);width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:15px}
+textarea{resize:vertical;min-height:60px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.top h1{margin:0;font-size:22px;font-weight:800;letter-spacing:1px;flex:1}
+.swim{width:44px;animation:bob 3.4s ease-in-out infinite}
+.swim .fl{transform-origin:50% 50%;animation:paddle 1.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-4px) rotate(-3deg)}}
+@keyframes paddle{50%{transform:rotate(14deg)}}
+.ic{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-size:16px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:none}
+.chip{flex:none;padding:8px 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);font-size:14px;white-space:nowrap}
+.chip.on{background:var(--moss);border-color:var(--moss);color:#fff;font-weight:600}
+.chip.ghost{border-style:dashed;color:var(--water);border-color:var(--water);background:transparent}
+.shell{padding:6px 0 14px}
+.shell h2,.sec h2{font-size:14px;margin:0 0 10px;color:var(--mut);font-weight:600}
+.hexrow{display:flex;justify-content:space-between;gap:2px}
+.hx{flex:1;text-align:center;font-size:11px;color:var(--mut)}
+.hx svg{width:100%;display:block;overflow:visible}
+.hx polygon{fill:var(--hex);stroke:var(--line);stroke-width:2;transition:fill .6s,transform .5s cubic-bezier(.3,1.6,.5,1);transform-origin:50% 50%;transform:scale(.3)}
+.hx.in polygon{transform:scale(1)}
+.hx.sun polygon{fill:var(--sun);stroke:var(--sun)}
+.hx.no polygon{fill:var(--water);opacity:.55}
+.hx.cur polygon{stroke:var(--ink);stroke-width:3}
+.hx text{font-size:20px;font-weight:700;fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.stats{display:flex;gap:16px;margin-top:12px;font-size:13px;color:var(--mut)}
+.stats b{display:block;font-size:20px;color:var(--ink)}
+.datebar{display:flex;align-items:center;justify-content:space-between;margin:6px 0 14px}
+.datebar strong{font-size:17px}
+.datebar button{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--panel)}
+.datebar button:disabled{opacity:.3}
+.sec{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.f{margin-bottom:16px}.f:last-child{margin-bottom:0}
+.f>label,.lab{display:block;font-size:13px;font-weight:600;margin-bottom:7px}
+.step{display:flex;align-items:center;gap:14px}
+.step button{width:42px;height:42px;border-radius:12px;border:1.5px solid var(--moss);background:transparent;font-size:22px;color:var(--moss)}
+.step output{font-size:28px;font-weight:800;min-width:40px;text-align:center;display:inline-block}
+.step output.pop{animation:pop .3s}
+@keyframes pop{40%{transform:scale(1.35)}}
+.wrapchips{display:flex;flex-wrap:wrap;gap:8px}
+.tag{padding:7px 12px;border-radius:999px;border:1.5px solid var(--line);background:transparent;font-size:14px}
+.tag.on{background:var(--water);border-color:var(--water);color:#fff}
+.seg{display:flex;gap:8px}.seg button{flex:1;padding:11px;border-radius:10px;border:1.5px solid var(--line);background:transparent}
+.seg button.sunon{background:var(--sun);border-color:var(--sun);color:#1c1500;font-weight:700}
+.seg button.on{background:var(--water);border-color:var(--water);color:#fff;font-weight:700}
+.durbox{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s}
+.durbox.open{grid-template-rows:1fr}
+.durbox>div{overflow:hidden}
+.durbox .in{padding-top:12px}
+.two{display:flex;gap:10px}.two>*{flex:1}
+.saved{font-size:12px;color:var(--mut);min-height:16px;margin:10px 0 0}
+.btn{width:100%;padding:13px;border:0;border-radius:12px;background:var(--moss);color:#fff;font-weight:700;font-size:15px}
+.btn.alt{background:transparent;border:1.5px solid var(--water);color:var(--water)}
+.btn.bad{background:var(--warn)}
+.hist{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px}
+.hist:last-child{border:0}
+.hist .b{flex:1;cursor:pointer;line-height:1.5}.hist .b b{font-size:14px}
+.hist .b span{color:var(--mut)}
+.hist .x{border:0;background:transparent;color:var(--mut);font-size:18px;padding:6px}
+.empty{color:var(--mut);font-size:13px;margin:0}
+.ov{position:fixed;inset:0;background:rgba(5,20,22,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20;animation:fade .2s}
+.md{background:var(--panel);width:100%;max-width:480px;max-height:88%;overflow:auto;border-radius:20px 20px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));animation:up .3s cubic-bezier(.2,.9,.3,1)}
+.md h3{margin:0 0 14px;font-size:17px}
+.md .acts{display:flex;gap:10px;margin-top:14px}.md .acts button{flex:1}
+.rp{margin-bottom:16px;padding-left:12px;border-left:4px solid var(--sun);font-size:14px;line-height:1.8}
+.rp b{display:block;font-size:15px}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:30;animation:tin .3s,tout .3s 2.2s forwards}
+@keyframes tin{from{transform:translate(-50%,20px);opacity:0}}
+@keyframes tout{to{opacity:0}}
+.hide{display:none!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.hx polygon{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <svg class="swim" viewBox="0 0 64 48" aria-hidden="true"><g class="fl"><ellipse cx="14" cy="34" rx="9" ry="4.5" fill="#6aa86f"/><ellipse cx="46" cy="36" rx="9" ry="4.5" fill="#6aa86f"/></g><circle cx="56" cy="22" r="7" fill="#6aa86f"/><circle cx="58" cy="20" r="1.4" fill="#17302f"/><ellipse cx="30" cy="24" rx="22" ry="15" fill="#3f8a4f"/><path d="M18 24h24M30 10v28M20 15l20 18M40 15L20 33" stroke="#2c6a3a" stroke-width="1.6" fill="none"/></svg>
+    <h1>烏龜日誌</h1>
+    <button class="ic" id="themeBtn" aria-label="切換主題">🌓</button>
+    <button class="ic" id="bkBtn" aria-label="備份同匯入">💾</button>
+  </div>
+  <div class="chips" id="bar"></div>
+
+  <div class="shell">
+    <h2>最近 7 日曬太陽</h2>
+    <div class="hexrow" id="hexes"></div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="datebar">
+    <button id="prev" aria-label="前一日">‹</button>
+    <strong id="dlabel"></strong>
+    <button id="next" aria-label="後一日">›</button>
+  </div>
+
+  <div class="sec">
+    <div class="f"><span class="lab">餵食次數</span>
+      <div class="step"><button data-feed="-1" aria-label="減少">−</button><output id="feed">0</output><button data-feed="1" aria-label="增加">+</button></div></div>
+    <div class="f"><label for="amount">每次份量</label><input id="amount" placeholder="例如：一粒拇指大 / 5g"></div>
+    <div class="f"><span class="lab">食咗啲咩</span>
+      <div class="wrapchips" id="foods"></div>
+      <input id="other" placeholder="其他食物（可留空）" style="margin-top:10px"></div>
+    <div class="f"><span class="lab">今日有冇曬太陽？</span>
+      <div class="seg"><button id="sY">有曬</button><button id="sN">冇曬</button></div>
+      <div class="durbox" id="durbox"><div><div class="in">
+        <div class="wrapchips" id="durchips"></div>
+        <input type="number" id="dur" min="0" max="600" inputmode="numeric" placeholder="分鐘" style="margin-top:10px"></div></div></div></div>
+    <div class="f two">
+      <div><span class="lab">換水</span><div class="seg"><button id="wY">已換</button></div></div>
+      <div><label for="weight">體重（g）</label><input type="number" id="weight" min="0" step="0.1" inputmode="decimal"></div></div>
+    <div class="f"><label for="note">備註</label><textarea id="note" placeholder="精神、食慾、排泄、有冇異常…"></textarea></div>
+    <p class="saved" id="saved">改動會自動儲存</p>
+  </div>
+
+  <button class="btn" id="repBtn" style="margin-bottom:14px">查看日報</button>
+
+  <div class="sec" style="margin-top:6px">
+    <h2 style="margin-bottom:6px">歷史記錄</h2>
+    <div id="hist"></div>
+  </div>
+  <button class="btn alt" id="editT">編輯／刪除目前烏龜</button>
+</div>
+
+<script>
+var K='turtleDiary2';
+var FOODS=['龜糧','小魚','蝦乾','菜葉','麵包蟲','蚯蚓'],DURS=[15,30,45,60,90];
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+function ld(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}}
+var S=ld(K,null);
+if(!S){S={turtles:ld('turtles',[]),logs:ld('turtle_logs',{}),active:null,shown:{},theme:'auto'};}
+if(!S.turtles.length)S.turtles.push({id:'t'+Date.now(),name:'我的烏龜',gender:'未知'});
+if(!S.turtles.some(function(t){return t.id===S.active}))S.active=S.turtles[0].id;
+S.shown=S.shown||{};
+function persist(){try{localStorage.setItem(K,JSON.stringify(S));return true}catch(e){return false}}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function today(){return ymd(new Date())}
+function shift(s,n){var p=s.split('-');var d=new Date(+p[0],+p[1]-1,+p[2]+n);return ymd(d)}
+var WD=['日','一','二','三','四','五','六'];
+function wd(s){var p=s.split('-');return WD[new Date(+p[0],+p[1]-1,+p[2]).getDay()]}
+var date=today(),lastDay=date,cur={},tm;
+function T(){return S.turtles.find(function(t){return t.id===S.active})}
+function logs(id){return S.logs[id||S.active]||{}}
+function toast(m){var o=document.createElement('div');o.className='toast';o.textContent=m;document.body.appendChild(o);setTimeout(function(){o.remove()},2600)}
+
+/* theme */
+function applyTheme(){if(S.theme==='auto')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',S.theme)}
+$('#themeBtn').onclick=function(){S.theme=S.theme==='auto'?'dark':S.theme==='dark'?'light':'auto';applyTheme();persist();toast('主題：'+({auto:'跟隨系統',dark:'深色',light:'淺色'})[S.theme])};
+
+/* turtles */
+function renderBar(){
+  var h=S.turtles.map(function(t){return '<button class="chip'+(t.id===S.active?' on':'')+'" data-id="'+esc(t.id)+'">'+esc(t.name)+'（'+esc(t.gender)+'）</button>'}).join('');
+  $('#bar').innerHTML=h+'<button class="chip ghost" id="addT">＋ 新增烏龜</button>';
+}
+$('#bar').onclick=function(e){var b=e.target.closest('button');if(!b)return;
+  if(b.id==='addT')return turtleModal(null);
+  S.active=b.dataset.id;persist();renderAll()};
+$('#editT').onclick=function(){turtleModal(T())};
+function turtleModal(t){
+  var g=t?t.gender:'未知';
+  modal('<h3>'+(t?'編輯烏龜':'新增烏龜')+'</h3><div class="f"><label>名稱</label><input id="tn" maxlength="12" value="'+esc(t?t.name:'')+'" placeholder="例如：阿寶"></div><div class="f"><span class="lab">性別</span><div class="seg" id="tg">'+['未知','公','乸'].map(function(x){return '<button data-g="'+x+'" class="'+(x===g?'on':'')+'">'+x+'</button>'}).join('')+'</div></div><div class="acts"><button class="btn alt" data-x>取消</button>'+(t&&S.turtles.length>1?'<button class="btn bad" id="tdel">刪除</button>':'')+'<button class="btn" id="tok">儲存</button></div>');
+  $('#tg').onclick=function(e){var b=e.target.closest('button');if(!b)return;g=b.dataset.g;[].forEach.call($('#tg').children,function(x){x.classList.toggle('on',x===b)})};
+  $('#tok').onclick=function(){var n=$('#tn').value.trim();if(!n){$('#tn').focus();return toast('請輸入烏龜名稱')}
+    if(t){t.name=n;t.gender=g}else{t={id:'t'+Date.now()+Math.random().toString(36).slice(2,5),name:n,gender:g};S.turtles.push(t);S.active=t.id}
+    persist();closeModal();renderAll()};
+  var d=$('#tdel');if(d)d.onclick=function(){if(!d.dataset.sure){d.dataset.sure=1;d.textContent='再按一次確認';return}
+    S.turtles=S.turtles.filter(function(x){return x.id!==t.id});delete S.logs[t.id];S.active=S.turtles[0].id;persist();closeModal();renderAll();toast('已刪除')};
+}
+
+/* modal */
+function modal(html){closeModal();var o=document.createElement('div');o.className='ov';o.id='ov';o.innerHTML='<div class="md" role="dialog">'+html+'</div>';
+  o.onclick=function(e){if(e.target===o||e.target.hasAttribute('data-x'))closeModal()};document.body.appendChild(o)}
+function closeModal(){var o=$('#ov');if(o)o.remove()}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+
+/* form */
+function blank(){return{feed:0,amount:'',foods:[],other:'',sun:null,dur:'',water:false,weight:'',note:''}}
+function fill(){
+  cur=Object.assign(blank(),logs()[date]||{});cur.foods=(cur.foods||[]).slice();
+  $('#feed').textContent=cur.feed;$('#amount').value=cur.amount;$('#other').value=cur.other;
+  $('#dur').value=cur.dur;$('#weight').value=cur.weight;$('#note').value=cur.note;
+  paintFoods();paintSun();paintWater();
+  $('#saved').textContent=logs()[date]?'已有記錄，改動會自動儲存':'改動會自動儲存';
+}
+function paintFoods(){$('#foods').innerHTML=FOODS.map(function(f){return '<button class="tag'+(cur.foods.indexOf(f)>-1?' on':'')+'" data-f="'+f+'">'+f+'</button>'}).join('')}
+function paintSun(){
+  $('#sY').className=cur.sun===true?'sunon':'';$('#sN').className=cur.sun===false?'on':'';
+  $('#durbox').classList.toggle('open',cur.sun===true);
+  $('#durchips').innerHTML=DURS.map(function(m){return '<button class="tag'+(+cur.dur===m?' on':'')+'" data-d="'+m+'">'+m+' 分</button>'}).join('');
+}
+function paintWater(){$('#wY').className=cur.water?'on':''}
+function touch(){clearTimeout(tm);tm=setTimeout(function(){
+  if(!S.logs[S.active])S.logs[S.active]={};
+  S.logs[S.active][date]=Object.assign({},cur,{t:Date.now()});
+  var ok=persist();
+  $('#saved').textContent=ok?'已自動儲存 ✓ '+new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'}):'⚠️ 無法儲存到瀏覽器，請用右上角 💾 備份';
+  renderShell();renderHist()},300)}
+document.querySelectorAll('[data-feed]').forEach(function(b){b.onclick=function(){
+  cur.feed=Math.max(0,Math.min(30,cur.feed+(+b.dataset.feed)));var o=$('#feed');o.textContent=cur.feed;o.classList.remove('pop');void o.offsetWidth;o.classList.add('pop');touch()}});
+$('#foods').onclick=function(e){var b=e.target.closest('button');if(!b)return;var f=b.dataset.f,i=cur.foods.indexOf(f);if(i>-1)cur.foods.splice(i,1);else cur.foods.push(f);paintFoods();touch()};
+$('#amount').oninput=function(){cur.amount=this.value;touch()};
+$('#other').oninput=function(){cur.other=this.value;touch()};
+$('#note').oninput=function(){cur.note=this.value;touch()};
+$('#sY').onclick=function(){cur.sun=cur.sun===true?null:true;paintSun();touch()};
+$('#sN').onclick=function(){cur.sun=cur.sun===false?null:false;cur.dur='';$('#dur').value='';paintSun();touch()};
+$('#durchips').onclick=function(e){var b=e.target.closest('button');if(!b)return;cur.dur=+b.dataset.d;$('#dur').value=cur.dur;paintSun();touch()};
+$('#dur').oninput=function(){var v=this.value===''?'':Math.max(0,Math.min(600,+this.value));cur.dur=v;paintSun();touch()};
+$('#wY').onclick=function(){cur.water=!cur.water;paintWater();touch()};
+$('#weight').oninput=function(){cur.weight=this.value===''?'':Math.max(0,+this.value);touch()};
+
+/* date nav */
+function paintDate(){var td=today();$('#dlabel').textContent=date+'（週'+wd(date)+'）'+(date===td?' 今日':'');$('#next').disabled=date>=td}
+$('#prev').onclick=function(){date=shift(date,-1);renderAll()};
+$('#next').onclick=function(){if(date<today()){date=shift(date,1);renderAll()}};
+
+/* shell chart + stats */
+function renderShell(){
+  var L=logs(),td=today(),h='',i,d,e,cls,txt,max=0;
+  for(i=6;i>=0;i--){d=shift(td,-i);e=L[d];
+    cls=e&&e.sun===true?'sun':e&&e.sun===false?'no':'';txt=e&&e.sun===true?(e.dur||'✓'):'';
+    h+='<div class="hx '+cls+(d===date?' cur':'')+'" data-d="'+d+'" style="transition-delay:'+(6-i)*60+'ms"><svg viewBox="0 0 60 66"><polygon points="30,3 57,17 57,49 30,63 3,49 3,17"/><text x="30" y="34">'+txt+'</text></svg>'+wd(d)+'</div>'}
+  $('#hexes').innerHTML=h;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){document.querySelectorAll('.hx').forEach(function(x){x.classList.add('in')})})});
+  var streak=0;d=td;if(!(L[d]&&L[d].sun===true))d=shift(d,-1);
+  while(L[d]&&L[d].sun===true){streak++;d=shift(d,-1)}
+  var tot=0,n=0;for(i=0;i<7;i++){e=L[shift(td,-i)];if(e&&e.sun===true){tot+=+e.dur||0;n++}}
+  var ws=Object.keys(L).filter(function(k){return L[k].weight!==''&&L[k].weight!=null}).sort(),w='—',dw='';
+  if(ws.length){w=L[ws[ws.length-1]].weight+' g';if(ws.length>1){var df=L[ws[ws.length-1]].weight-L[ws[ws.length-2]].weight;dw=' ('+(df>=0?'+':'')+df.toFixed(1)+')'}}
+  $('#stats').innerHTML='<div><b>'+streak+' 日</b>連續曬太陽</div><div><b>'+(n?Math.round(tot/n):0)+' 分</b>曬日平均</div><div><b>'+esc(w)+'</b>最新體重'+esc(dw)+'</div>';
+}
+$('#hexes').onclick=function(e){var h=e.target.closest('.hx');if(h){date=h.dataset.d;renderAll()}};
+
+/* history */
+function sunTxt(e){return e.sun===true?'曬太陽 '+(e.dur||'—')+' 分':e.sun===false?'冇曬太陽':'曬太陽未記錄'}
+function renderHist(){
+  var L=logs(),ds=Object.keys(L).sort().reverse().slice(0,30);
+  $('#hist').innerHTML=ds.length?ds.map(function(d){var e=L[d],f=(e.foods||[]).concat(e.other?[e.other]:[]).join('、');
+    return '<div class="hist"><div class="b" data-d="'+d+'"><b>'+d+'（週'+wd(d)+'）</b><br><span>餵 '+(e.feed||0)+' 次'+(f?'・'+esc(f):'')+'・'+sunTxt(e)+(e.water?'・已換水':'')+(e.weight!==''&&e.weight!=null?'・'+e.weight+'g':'')+'</span></div><button class="x" data-del="'+d+'" aria-label="刪除">✕</button></div>'}).join(''):'<p class="empty">未有記錄。揀返上面日期，填第一筆就會喺度出現。</p>';
+}
+$('#hist').onclick=function(e){var x=e.target.closest('[data-del]');
+  if(x){if(x.dataset.sure){delete S.logs[S.active][x.dataset.del];persist();renderAll();toast('已刪除記錄')}else{x.dataset.sure=1;x.textContent='確認?';x.style.color='var(--warn)'}return}
+  var b=e.target.closest('[data-d]');if(b){date=b.dataset.d;renderAll();window.scrollTo({top:0,behavior:'smooth'})}};
+
+/* report */
+function reportLines(id,d){var t=S.turtles.find(function(x){return x.id===id}),e=(S.logs[id]||{})[d];if(!t)return null;
+  if(!e)return[t.name+'（'+t.gender+'）','未有記錄'];
+  var f=(e.foods||[]).concat(e.other?[e.other]:[]).join('、')||'未記錄';
+  return[t.name+'（'+t.gender+'）',
+   '餵食：'+(e.feed||0)+' 次'+(e.amount?'，每次 '+e.amount:''),'食物：'+f,'曬太陽：'+(e.sun===true?'有，約 '+(e.dur||'—')+' 分鐘':e.sun===false?'冇':'未記錄'),
+   '換水：'+(e.water?'已換':'未換'),e.weight!==''&&e.weight!=null?'體重：'+e.weight+' g':null,e.note?'備註：'+e.note:null].filter(Boolean)}
+function reportModal(d,all){
+  var ids=all?S.turtles.map(function(t){return t.id}):[S.active],txt=[d+' 烏龜日報'];
+  var h='<h3>'+d+' 日報</h3>'+ids.map(function(id){var l=reportLines(id,d);txt.push('',l.join('\n'));
+    return '<div class="rp"><b>'+esc(l[0])+'</b>'+l.slice(1).map(esc).join('<br>')+'</div>'}).join('')+'<div class="acts"><button class="btn alt" data-x>關閉</button><button class="btn" id="cp">複製文字</button></div>';
+  modal(h);$('#cp').onclick=function(){copy(txt.join('\n'),'已複製日報')};
+}
+$('#repBtn').onclick=function(){reportModal(date,false)};
+function copy(s,msg){
+  function fb(){var t=document.createElement('textarea');t.value=s;document.body.appendChild(t);t.select();try{document.execCommand('copy');toast(msg)}catch(e){toast('請手動複製')}t.remove()}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(function(){toast(msg)},fb);else fb()}
+
+/* backup */
+$('#bkBtn').onclick=function(){
+  modal('<h3>備份同匯入</h3><p class="empty" style="margin-bottom:10px">複製下面文字存起，換手機或清除瀏覽器資料後貼返入嚟就可以還原。匯入會覆蓋目前資料。</p><textarea id="bk" style="min-height:140px;font-size:12px">'+esc(JSON.stringify({turtles:S.turtles,logs:S.logs}))+'</textarea><div class="acts"><button class="btn alt" id="bkc">複製</button><button class="btn" id="bki">匯入</button></div>');
+  $('#bkc').onclick=function(){copy($('#bk').value,'已複製備份')};
+  $('#bki').onclick=function(){try{var o=JSON.parse($('#bk').value);if(!Array.isArray(o.turtles)||!o.turtles.length||typeof o.logs!=='object')throw 0;
+    S.turtles=o.turtles.map(function(t){return{id:String(t.id),name:String(t.name||'烏龜'),gender:String(t.gender||'未知')}});S.logs=o.logs;S.active=S.turtles[0].id;persist();closeModal();date=today();renderAll();toast('已匯入')}catch(e){toast('格式唔啱，匯入失敗')}}};
+
+/* timers: daily 22:00 report, midnight rollover */
+function tick(){var n=new Date(),td=ymd(n);
+  if(td!==lastDay){if(date===lastDay)date=td;lastDay=td;renderAll()}
+  if(n.getHours()>=22&&!S.shown[td]&&!$('#ov')){S.shown[td]=1;
+    Object.keys(S.shown).forEach(function(k){if(k<shift(td,-30))delete S.shown[k]});persist();reportModal(td,true)}}
+setInterval(tick,20000);document.addEventListener('visibilitychange',function(){if(!document.hidden)tick()});
+
+function renderAll(){applyTheme();renderBar();paintDate();fill();renderShell();renderHist()}
+renderAll();tick();
+</script>
+</body>
+</html>
