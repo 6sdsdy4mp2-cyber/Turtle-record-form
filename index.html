@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <title>烏龜日誌</title>
 <style>
 :root{--bg:#eef4ef;--panel:#fff;--ink:#17302f;--mut:#5d7775;--line:#d3e0da;--moss:#3f8a4f;--sun:#e39a12;--water:#2f7f86;--warn:#b84a2a;--hex:#dbe8e2;
@@ -86,6 +86,28 @@ textarea{resize:vertical;min-height:60px}
 .rp b{display:block;font-size:15px}
 @keyframes fade{from{opacity:0}}
 @keyframes up{from{transform:translateY(40px);opacity:0}}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.pics{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.pics:empty{display:none}
+.pic{position:relative;width:84px;height:84px;border-radius:10px;overflow:hidden;background:var(--hex);animation:pop .3s}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.pic button{position:absolute;top:3px;right:3px;width:28px;height:28px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:12px}
+.addpic{display:block;text-align:center;margin-top:10px;padding:11px;font-size:14px}
+.tag.on.bad{background:var(--warn);border-color:var(--warn)}
+.page{position:fixed;inset:0;z-index:25;background:var(--bg);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);animation:up .3s cubic-bezier(.2,.9,.3,1)}
+.ph{flex:none;display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.ph h3{margin:0;font-size:17px;flex:1}
+.ph button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:0 16px;height:44px}
+.pb{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:14px 14px calc(24px + env(safe-area-inset-bottom,0px));width:100%;max-width:760px;margin:0 auto}
+.rt{border-collapse:separate;border-spacing:0;font-size:13px;background:var(--panel);border:1px solid var(--line);border-radius:12px;min-width:100%}
+.rt th,.rt td{padding:10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;min-width:112px;line-height:1.5}
+.rt tr:last-child td,.rt tr:last-child th{border-bottom:0}
+.rt thead th{background:var(--hex);font-size:14px}
+.rt tbody th{position:sticky;left:0;background:var(--panel);min-width:70px;color:var(--mut);font-weight:600;z-index:1}
+.rt thead th:first-child{position:sticky;left:0;z-index:2;min-width:70px}
+.rt .badt{color:var(--warn);font-weight:700}
+.rt .no{color:var(--mut);font-weight:400}
+.rt img{width:64px;height:64px;object-fit:cover;border-radius:8px;margin:0 4px 4px 0;display:inline-block}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:30;animation:tin .3s,tout .3s 2.2s forwards}
 @keyframes tin{from{transform:translate(-50%,20px);opacity:0}}
 @keyframes tout{to{opacity:0}}
@@ -131,11 +153,15 @@ textarea{resize:vertical;min-height:60px}
     <div class="f two">
       <div><span class="lab">換水</span><div class="seg"><button id="wY">已換</button></div></div>
       <div><label for="weight">體重（g）</label><input type="number" id="weight" min="0" step="0.1" inputmode="decimal"></div></div>
+    <div class="f"><span class="lab">糞便狀況</span>
+      <div class="wrapchips" id="poops"></div>
+      <div class="pics" id="pics"></div>
+      <label class="btn alt addpic" id="addpic">📷 拍照／從相簿選取<input type="file" id="file" class="vh" accept="image/*" multiple></label></div>
     <div class="f"><label for="note">備註</label><textarea id="note" placeholder="精神、食慾、排泄、有冇異常…"></textarea></div>
     <p class="saved" id="saved">改動會自動儲存</p>
   </div>
 
-  <button class="btn" id="repBtn" style="margin-bottom:14px">查看日報</button>
+  <button class="btn" id="repBtn" style="margin-bottom:14px">生成日報表格</button>
 
   <div class="sec" style="margin-top:6px">
     <h2 style="margin-bottom:6px">歷史記錄</h2>
@@ -154,8 +180,7 @@ function ld(k,f){try{var v=localStorage.getItem(k);return v?JSON.parse(v):f}catc
 var S=ld(K,null);
 if(!S){var oL=ld('turtle_logs',{}),nL={};Object.keys(oL).forEach(function(id){nL[id]={};Object.keys(oL[id]||{}).forEach(function(d){var o=oL[id][d]||{};nL[id][d]=Object.assign(blank(),{feed:o.feedCount||0,amount:o.amount||'',other:o.food||'',sun:o.sun===true?true:o.sun===false?false:null,dur:o.duration==null?'':o.duration})})});
   S={turtles:ld('turtles',[]),logs:nL,active:null,shown:{},theme:'auto'};}
-if(!S.turtles.length)S.turtles.push({id:'t'+Date.now(),name:'我的烏龜',gender:'未知'});
-if(!S.turtles.some(function(t){return t.id===S.active}))S.active=S.turtles[0].id;
+if(!S.turtles.some(function(t){return t.id===S.active}))S.active=S.turtles.length?S.turtles[0].id:null;
 S.shown=S.shown||{};
 function persist(){try{localStorage.setItem(K,JSON.stringify(S));return true}catch(e){return false}}
 function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -181,30 +206,30 @@ $('#bar').onclick=function(e){var b=e.target.closest('button');if(!b)return;
   if(b.id==='addT')return turtleModal(null);
   S.active=b.dataset.id;persist();renderAll()};
 $('#editT').onclick=function(){turtleModal(T())};
-function turtleModal(t){
+function turtleModal(t,force){
   commit();var g=t?t.gender:'未知';
-  modal('<h3>'+(t?'編輯烏龜':'新增烏龜')+'</h3><div class="f"><label>名稱</label><input id="tn" maxlength="12" value="'+esc(t?t.name:'')+'" placeholder="例如：阿寶"></div><div class="f"><span class="lab">性別</span><div class="seg" id="tg">'+['未知','公','乸'].map(function(x){return '<button data-g="'+x+'" class="'+(x===g?'on':'')+'">'+x+'</button>'}).join('')+'</div></div><div class="acts"><button class="btn alt" data-x>取消</button>'+(t&&S.turtles.length>1?'<button class="btn bad" id="tdel">刪除</button>':'')+'<button class="btn" id="tok">儲存</button></div>');
+  modal('<h3>'+(force?'🐢 歡迎！先新增你嘅第一隻烏龜':t?'編輯烏龜':'新增烏龜')+'</h3><div class="f"><label>名稱</label><input id="tn" maxlength="12" value="'+esc(t?t.name:'')+'" placeholder="例如：阿寶"></div><div class="f"><span class="lab">性別</span><div class="seg" id="tg">'+['未知','公','乸'].map(function(x){return '<button data-g="'+x+'" class="'+(x===g?'on':'')+'">'+x+'</button>'}).join('')+'</div></div><div class="acts">'+(force?'':'<button class="btn alt" data-x>取消</button>')+(t&&S.turtles.length>1?'<button class="btn bad" id="tdel">刪除</button>':'')+'<button class="btn" id="tok">儲存</button></div>',force);
   $('#tg').onclick=function(e){var b=e.target.closest('button');if(!b)return;g=b.dataset.g;[].forEach.call($('#tg').children,function(x){x.classList.toggle('on',x===b)})};
   $('#tok').onclick=function(){var n=$('#tn').value.trim();if(!n){$('#tn').focus();return toast('請輸入烏龜名稱')}
     if(t){t.name=n;t.gender=g}else{t={id:'t'+Date.now()+Math.random().toString(36).slice(2,5),name:n,gender:g};S.turtles.push(t);S.active=t.id}
     persist();closeModal();renderAll()};
   var d=$('#tdel');if(d)d.onclick=function(){if(!d.dataset.sure){d.dataset.sure=1;d.textContent='再按一次確認';return}
-    S.turtles=S.turtles.filter(function(x){return x.id!==t.id});delete S.logs[t.id];S.active=S.turtles[0].id;persist();closeModal();renderAll();toast('已刪除')};
+    S.turtles=S.turtles.filter(function(x){return x.id!==t.id});Object.keys(S.logs[t.id]||{}).forEach(function(d){((S.logs[t.id][d].pics)||[]).forEach(delPic)});delete S.logs[t.id];S.active=S.turtles[0].id;persist();closeModal();renderAll();toast('已刪除')};
 }
 
 /* modal */
-function modal(html){closeModal();var o=document.createElement('div');o.className='ov';o.id='ov';o.innerHTML='<div class="md" role="dialog">'+html+'</div>';
-  o.onclick=function(e){if(e.target===o||e.target.hasAttribute('data-x'))closeModal()};document.body.appendChild(o)}
+function modal(html,lock){closeModal();var o=document.createElement('div');o.className='ov';o.id='ov';if(lock)o.dataset.lock=1;o.innerHTML='<div class="md" role="dialog">'+html+'</div>';
+  o.onclick=function(e){if(lock)return;if(e.target===o||e.target.hasAttribute('data-x'))closeModal()};document.body.appendChild(o)}
 function closeModal(){var o=$('#ov');if(o)o.remove()}
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var o=$('#ov');if(o){if(!o.dataset.lock)closeModal()}else closeRpt()}});
 
 /* form */
-function blank(){return{feed:0,amount:'',foods:[],other:'',sun:null,dur:'',water:false,weight:'',note:''}}
+function blank(){return{feed:0,amount:'',foods:[],other:'',sun:null,dur:'',water:false,weight:'',poop:'',pics:[],note:''}}
 function fill(){
-  cur=Object.assign(blank(),logs()[date]||{});cur.foods=(cur.foods||[]).slice();
+  cur=Object.assign(blank(),logs()[date]||{});cur.foods=(cur.foods||[]).slice();cur.pics=(cur.pics||[]).slice();
   $('#feed').textContent=cur.feed;$('#amount').value=cur.amount;$('#other').value=cur.other;
   $('#dur').value=cur.dur;$('#weight').value=cur.weight;$('#note').value=cur.note;
-  paintFoods();paintSun();paintWater();
+  paintFoods();paintSun();paintWater();paintPoop();
   $('#saved').textContent=logs()[date]?'已有記錄，改動會自動儲存':'改動會自動儲存';
 }
 function paintFoods(){$('#foods').innerHTML=FOODS.map(function(f){return '<button class="tag'+(cur.foods.indexOf(f)>-1?' on':'')+'" data-f="'+f+'">'+f+'</button>'}).join('')}
@@ -221,7 +246,7 @@ function commit(){clearTimeout(tm);if(!pend)return;var p=pend;pend=null;
   var ok=persist();
   $('#saved').textContent=ok?'已自動儲存 ✓ '+new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'}):'⚠️ 無法儲存到瀏覽器，請用右上角 💾 備份';
   renderShell(false);renderHist()}
-function touch(){pend={id:S.active,d:date,e:Object.assign({},cur,{foods:cur.foods.slice(),t:Date.now()})};clearTimeout(tm);tm=setTimeout(commit,500)}
+function touch(){pend={id:S.active,d:date,e:Object.assign({},cur,{foods:cur.foods.slice(),pics:cur.pics.slice(),t:Date.now()})};clearTimeout(tm);tm=setTimeout(commit,500)}
 document.querySelectorAll('[data-feed]').forEach(function(b){b.onclick=function(){
   cur.feed=Math.max(0,Math.min(30,cur.feed+(+b.dataset.feed)));var o=$('#feed');o.textContent=cur.feed;o.classList.remove('pop');void o.offsetWidth;o.classList.add('pop');touch()}});
 $('#foods').onclick=function(e){var b=e.target.closest('button');if(!b)return;var f=b.dataset.f,i=cur.foods.indexOf(f);if(i>-1)cur.foods.splice(i,1);else cur.foods.push(f);paintFoods();touch()};
@@ -234,6 +259,30 @@ $('#durchips').onclick=function(e){var b=e.target.closest('button');if(!b)return
 $('#dur').oninput=function(){var v=this.value===''?'':Math.max(0,Math.min(600,+this.value));cur.dur=v;paintSun();touch()};
 $('#wY').onclick=function(){cur.water=!cur.water;paintWater();touch()};
 $('#weight').oninput=function(){cur.weight=this.value===''?'':Math.max(0,+this.value);touch()};
+
+/* poop + photos */
+var POOPS=['正常','偏軟','稀水','偏硬','異常','冇排便'],PC={},db=null;
+function idb(){return new Promise(function(res){if(db)return res(db);try{var r=indexedDB.open('turtlePics',1);r.onupgradeneeded=function(){r.result.createObjectStore('p')};r.onsuccess=function(){db=r.result;res(db)};r.onerror=function(){res(null)}}catch(e){res(null)}})}
+function putPic(id,data){return idb().then(function(d){return new Promise(function(res){if(!d)return res(false);try{var tx=d.transaction('p','readwrite');tx.objectStore('p').put(data,id);tx.oncomplete=function(){res(true)};tx.onerror=function(){res(false)}}catch(e){res(false)}})})}
+function getPic(id){if(PC[id])return Promise.resolve(PC[id]);return idb().then(function(d){return new Promise(function(res){if(!d)return res(null);try{var q=d.transaction('p').objectStore('p').get(id);q.onsuccess=function(){if(q.result)PC[id]=q.result;res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})})}
+function delPic(id){delete PC[id];idb().then(function(d){try{if(d)d.transaction('p','readwrite').objectStore('p').delete(id)}catch(e){}})}
+function shrink(file){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.72))};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
+function paintPoop(){
+  $('#poops').innerHTML=POOPS.map(function(p){return '<button class="tag'+(cur.poop===p?' on':'')+((p==='稀水'||p==='異常')?' bad':'')+'" data-p="'+p+'">'+p+'</button>'}).join('');
+  $('#pics').innerHTML=cur.pics.map(function(id){return '<div class="pic"><img alt="糞便相片" data-id="'+esc(id)+'"><button data-rm="'+esc(id)+'" aria-label="刪除相片">✕</button></div>'}).join('');
+  [].forEach.call($('#pics').querySelectorAll('img'),function(im){getPic(im.dataset.id).then(function(d){if(d)im.src=d})});
+  $('#addpic').classList.toggle('hide',cur.pics.length>=3)}
+$('#poops').onclick=function(e){var b=e.target.closest('button');if(!b)return;cur.poop=cur.poop===b.dataset.p?'':b.dataset.p;paintPoop();touch()};
+$('#pics').onclick=function(e){var b=e.target.closest('[data-rm]');if(!b)return;var id=b.dataset.rm;cur.pics=cur.pics.filter(function(x){return x!==id});delPic(id);paintPoop();touch()};
+$('#file').onchange=function(){var fs=[].slice.call(this.files).slice(0,3-cur.pics.length),ctx=cur;this.value='';
+  if(!fs.length)return toast('每日最多 3 張相片');
+  fs.forEach(function(f){shrink(f).then(function(data){
+    if(ctx!==cur||ctx.pics.length>=3)return;
+    var id='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    PC[id]=data;ctx.pics.push(id);paintPoop();touch();
+    putPic(id,data).then(function(ok){if(!ok)toast('相片可能無法長期保存')})
+  },function(){toast('讀取相片失敗')})})};
+function cleanLogs(L){var r={};Object.keys(L||{}).forEach(function(id){r[id]={};var m=L[id]||{};Object.keys(m).forEach(function(d){if(!/^\d{4}-\d\d-\d\d$/.test(d))return;var e=m[d]||{};r[id][d]={feed:Math.max(0,Math.min(30,+e.feed||0)),amount:String(e.amount||'').slice(0,80),foods:(Array.isArray(e.foods)?e.foods:[]).filter(function(f){return FOODS.indexOf(f)>-1}),other:String(e.other||'').slice(0,80),sun:e.sun===true?true:e.sun===false?false:null,dur:e.dur===''||e.dur==null?'':Math.max(0,Math.min(600,+e.dur||0)),water:!!e.water,weight:e.weight===''||e.weight==null?'':Math.max(0,+e.weight||0),poop:POOPS.indexOf(e.poop)>-1?e.poop:'',pics:(Array.isArray(e.pics)?e.pics:[]).filter(function(p){return /^p[a-z0-9]+$/i.test(p)}).slice(0,3),note:String(e.note||'').slice(0,500),t:+e.t||0}})});return r}
 
 /* date nav */
 function paintDate(){var td=today();$('#dlabel').textContent=date+'（週'+wd(date)+'）'+(date===td?' 今日':'');$('#next').disabled=date>=td}
@@ -262,10 +311,10 @@ function sunTxt(e){return e.sun===true?'曬太陽 '+(e.dur||'—')+' 分':e.sun=
 function renderHist(){
   var L=logs(),ds=Object.keys(L).sort().reverse().slice(0,30);
   $('#hist').innerHTML=ds.length?ds.map(function(d){var e=L[d],f=(e.foods||[]).concat(e.other?[e.other]:[]).join('、');
-    return '<div class="hist"><div class="b" data-d="'+d+'"><b>'+d+'（週'+wd(d)+'）</b><br><span>餵 '+(e.feed||0)+' 次'+(f?'・'+esc(f):'')+'・'+sunTxt(e)+(e.water?'・已換水':'')+(e.weight!==''&&e.weight!=null?'・'+e.weight+'g':'')+'</span></div><button class="x" data-del="'+d+'" aria-label="刪除">✕</button></div>'}).join(''):'<p class="empty">未有記錄。揀返上面日期，填第一筆就會喺度出現。</p>';
+    return '<div class="hist"><div class="b" data-d="'+d+'"><b>'+d+'（週'+wd(d)+'）</b><br><span>餵 '+(e.feed||0)+' 次'+(f?'・'+esc(f):'')+'・'+sunTxt(e)+(e.water?'・已換水':'')+(e.poop?'・糞便'+e.poop:'')+((e.pics&&e.pics.length)?'・📷'+e.pics.length:'')+(e.weight!==''&&e.weight!=null?'・'+e.weight+'g':'')+'</span></div><button class="x" data-del="'+d+'" aria-label="刪除">✕</button></div>'}).join(''):'<p class="empty">未有記錄。揀返上面日期，填第一筆就會喺度出現。</p>';
 }
 $('#hist').onclick=function(e){var x=e.target.closest('[data-del]');
-  if(x){if(x.dataset.sure){commit();delete S.logs[S.active][x.dataset.del];persist();renderAll();toast('已刪除記錄')}else{x.dataset.sure=1;x.textContent='確認?';x.style.color='var(--warn)'}return}
+  if(x){if(x.dataset.sure){commit();var oe=S.logs[S.active][x.dataset.del];((oe&&oe.pics)||[]).forEach(delPic);delete S.logs[S.active][x.dataset.del];persist();renderAll();toast('已刪除記錄')}else{x.dataset.sure=1;x.textContent='確認?';x.style.color='var(--warn)'}return}
   var b=e.target.closest('[data-d]');if(b){date=b.dataset.d;renderAll();window.scrollTo({top:0,behavior:'smooth'})}};
 
 /* report */
@@ -274,35 +323,51 @@ function reportLines(id,d){var t=S.turtles.find(function(x){return x.id===id}),e
   var f=(e.foods||[]).concat(e.other?[e.other]:[]).join('、')||'未記錄';
   return[t.name+'（'+t.gender+'）',
    '餵食：'+(e.feed||0)+' 次'+(e.amount?'，每次 '+e.amount:''),'食物：'+f,'曬太陽：'+(e.sun===true?'有，約 '+(e.dur||'—')+' 分鐘':e.sun===false?'冇':'未記錄'),
-   '換水：'+(e.water?'已換':'未換'),e.weight!==''&&e.weight!=null?'體重：'+e.weight+' g':null,e.note?'備註：'+e.note:null].filter(Boolean)}
-function reportModal(d,all){
-  var ids=all?S.turtles.map(function(t){return t.id}):[S.active],txt=[d+' 烏龜日報'];
-  var h='<h3>'+d+' 日報</h3>'+ids.map(function(id){var l=reportLines(id,d);txt.push('',l.join('\n'));
-    return '<div class="rp"><b>'+esc(l[0])+'</b>'+l.slice(1).map(esc).join('<br>')+'</div>'}).join('')+'<div class="acts"><button class="btn alt" data-x>關閉</button><button class="btn" id="cp">複製文字</button></div>';
-  modal(h);$('#cp').onclick=function(){copy(txt.join('\n'),'已複製日報')};
+   '換水：'+(e.water?'已換':'未換'),'糞便：'+(e.poop||'未記錄')+((e.pics&&e.pics.length)?'（附 '+e.pics.length+' 張相片）':''),e.weight!==''&&e.weight!=null?'體重：'+e.weight+' g':null,e.note?'備註：'+e.note:null].filter(Boolean)}
+function closeRpt(){var p=$('#rpt');if(p)p.remove()}
+function reportPage(d){
+  commit();if(!S.turtles.length)return;closeRpt();
+  var ts=S.turtles,txt=[d+' 烏龜日報'];
+  var R=[
+   ['餵食',function(e){return esc(e.feed||0)+' 次'}],
+   ['份量',function(e){return esc(e.amount)||'—'}],
+   ['食物',function(e){return esc((e.foods||[]).concat(e.other?[e.other]:[]).join('、'))||'—'}],
+   ['曬太陽',function(e){return e.sun===true?'有，'+esc(e.dur||'—')+' 分鐘':e.sun===false?'冇':'未記錄'}],
+   ['換水',function(e){return e.water?'已換':'未換'}],
+   ['體重',function(e){return e.weight!==''&&e.weight!=null?esc(e.weight)+' g':'—'}],
+   ['糞便',function(e){return e.poop?'<span class="'+(e.poop==='稀水'||e.poop==='異常'?'badt':'')+'">'+esc(e.poop)+'</span>':'未記錄'}],
+   ['相片',function(e){return (e.pics||[]).map(function(id){return '<img data-id="'+esc(id)+'" alt="糞便相片">'}).join('')||'—'}],
+   ['備註',function(e){return esc(e.note)||'—'}]];
+  ts.forEach(function(t){txt.push('',reportLines(t.id,d).join('\n'))});
+  var h='<div class="ph"><button id="rb">‹ 返回</button><h3>'+esc(d)+' 日報</h3><button id="rc">複製</button></div><div class="pb"><table class="rt"><thead><tr><th></th>'+ts.map(function(t){return '<th>'+esc(t.name)+'<br><small class="no">'+esc(t.gender)+'</small></th>'}).join('')+'</tr></thead><tbody>'+R.map(function(r,ri){return '<tr><th>'+r[0]+'</th>'+ts.map(function(t){var e=(S.logs[t.id]||{})[d];return '<td>'+(e?r[1](e):(ri===0?'<span class="no">未有記錄</span>':'—'))+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>';
+  var p=document.createElement('div');p.className='page';p.id='rpt';p.innerHTML=h;document.body.appendChild(p);
+  [].forEach.call(p.querySelectorAll('img[data-id]'),function(im){getPic(im.dataset.id).then(function(x){if(x)im.src=x;else im.remove()})});
+  $('#rb').onclick=closeRpt;$('#rc').onclick=function(){copy(txt.join('\n'),'已複製日報')};
 }
-$('#repBtn').onclick=function(){commit();reportModal(date,false)};
+$('#repBtn').onclick=function(){reportPage(date)};
 function copy(s,msg){
   function fb(){var t=document.createElement('textarea');t.value=s;document.body.appendChild(t);t.select();try{document.execCommand('copy');toast(msg)}catch(e){toast('請手動複製')}t.remove()}
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(s).then(function(){toast(msg)},fb);else fb()}
 
 /* backup */
 $('#bkBtn').onclick=function(){commit();
-  modal('<h3>備份同匯入</h3><p class="empty" style="margin-bottom:10px">複製下面文字存起，換手機或清除瀏覽器資料後貼返入嚟就可以還原。匯入會覆蓋目前資料。</p><textarea id="bk" style="min-height:140px;font-size:12px">'+esc(JSON.stringify({turtles:S.turtles,logs:S.logs}))+'</textarea><div class="acts"><button class="btn alt" id="bkc">複製</button><button class="btn" id="bki">匯入</button></div>');
+  modal('<h3>備份同匯入</h3><p class="empty" style="margin-bottom:10px">複製下面文字存起，換手機或清除瀏覽器資料後貼返入嚟就可以還原。匯入會覆蓋目前資料。相片只存在這部裝置，不包括在備份內。</p><textarea id="bk" style="min-height:140px;font-size:12px">'+esc(JSON.stringify({turtles:S.turtles,logs:S.logs}))+'</textarea><div class="acts"><button class="btn alt" id="bkc">複製</button><button class="btn" id="bki">匯入</button></div>');
   $('#bkc').onclick=function(){copy($('#bk').value,'已複製備份')};
   $('#bki').onclick=function(){try{var o=JSON.parse($('#bk').value);if(!Array.isArray(o.turtles)||!o.turtles.length||typeof o.logs!=='object')throw 0;
-    S.turtles=o.turtles.map(function(t){return{id:String(t.id),name:String(t.name||'烏龜'),gender:String(t.gender||'未知')}});S.logs=o.logs;S.active=S.turtles[0].id;persist();closeModal();date=today();renderAll();toast('已匯入')}catch(e){toast('格式唔啱，匯入失敗')}}};
+    S.turtles=o.turtles.map(function(t){return{id:String(t.id),name:String(t.name||'烏龜'),gender:String(t.gender||'未知')}});S.logs=cleanLogs(o.logs);S.active=S.turtles[0].id;persist();closeModal();date=today();renderAll();toast('已匯入')}catch(e){toast('格式唔啱，匯入失敗')}}};
 
 /* timers: daily 22:00 report, midnight rollover */
 function tick(){var n=new Date(),td=ymd(n);
   if(td!==lastDay){if(date===lastDay)date=td;lastDay=td;renderAll()}
-  if(n.getHours()>=22&&!S.shown[td]&&!$('#ov')){S.shown[td]=1;
-    Object.keys(S.shown).forEach(function(k){if(k<shift(td,-30))delete S.shown[k]});commit();persist();reportModal(td,true)}}
+  if(n.getHours()>=22&&S.turtles.length&&!S.shown[td]&&!$('#ov')&&!$('#rpt')){S.shown[td]=1;
+    Object.keys(S.shown).forEach(function(k){if(k<shift(td,-30))delete S.shown[k]});commit();persist();reportPage(td)}}
 setInterval(tick,20000);document.addEventListener('visibilitychange',function(){if(document.hidden)commit();else tick()});window.addEventListener('pagehide',commit);
+['gesturestart','gesturechange','gestureend','dblclick'].forEach(function(ev){document.addEventListener(ev,function(e){e.preventDefault()})});
+document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});
 document.addEventListener('focusin',function(e){var t=e.target;if(t.matches&&t.matches('input,textarea')&&!t.closest('.md'))setTimeout(function(){t.scrollIntoView({block:'center'})},300)});
 
 function renderAll(){commit();applyTheme();renderBar();paintDate();fill();renderShell(true);renderHist()}
-renderAll();tick();
+renderAll();if(!S.turtles.length)turtleModal(null,true);tick();
 </script>
 </body>
 </html>
