@@ -108,12 +108,15 @@ textarea{resize:vertical;min-height:60px}
 .rt .badt{color:var(--warn);font-weight:700}
 .rt .no{color:var(--mut);font-weight:400}
 .rt img{width:64px;height:64px;object-fit:cover;border-radius:8px;margin:0 4px 4px 0;display:inline-block}
+.qr{display:flex;justify-content:center;margin:6px 0 12px}
+.qr img{width:230px;height:230px;image-rendering:pixelated;background:#fff;padding:8px;border-radius:12px}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-size:14px;z-index:30;animation:tin .3s,tout .3s 2.2s forwards}
 @keyframes tin{from{transform:translate(-50%,20px);opacity:0}}
 @keyframes tout{to{opacity:0}}
 .hide{display:none!important}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.hx polygon{transform:none}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -123,6 +126,7 @@ textarea{resize:vertical;min-height:60px}
     <h1>烏龜日誌</h1>
     <button class="ic" id="themeBtn" aria-label="切換主題">🌓</button>
     <button class="ic" id="bkBtn" aria-label="備份同匯入">💾</button>
+    <button class="ic" id="syncBtn" aria-label="雙機同步">🔗</button>
   </div>
   <div class="chips" id="bar"></div>
   <div class="datebar">
@@ -211,10 +215,10 @@ function turtleModal(t,force){
   modal('<h3>'+(force?'🐢 歡迎！先新增你嘅第一隻烏龜':t?'編輯烏龜':'新增烏龜')+'</h3><div class="f"><label>名稱</label><input id="tn" maxlength="12" value="'+esc(t?t.name:'')+'" placeholder="例如：阿寶"></div><div class="f"><span class="lab">性別</span><div class="seg" id="tg">'+['未知','公','乸'].map(function(x){return '<button data-g="'+x+'" class="'+(x===g?'on':'')+'">'+x+'</button>'}).join('')+'</div></div><div class="acts">'+(force?'':'<button class="btn alt" data-x>取消</button>')+(t&&S.turtles.length>1?'<button class="btn bad" id="tdel">刪除</button>':'')+'<button class="btn" id="tok">儲存</button></div>',force);
   $('#tg').onclick=function(e){var b=e.target.closest('button');if(!b)return;g=b.dataset.g;[].forEach.call($('#tg').children,function(x){x.classList.toggle('on',x===b)})};
   $('#tok').onclick=function(){var n=$('#tn').value.trim();if(!n){$('#tn').focus();return toast('請輸入烏龜名稱')}
-    if(t){t.name=n;t.gender=g}else{t={id:'t'+Date.now()+Math.random().toString(36).slice(2,5),name:n,gender:g};S.turtles.push(t);S.active=t.id}
-    persist();closeModal();renderAll()};
+    if(t){t.name=n;t.gender=g}else{t={id:'t'+Date.now()+Math.random().toString(36).slice(2,5),name:n,gender:g,ts:Date.now()};S.turtles.push(t);S.active=t.id}
+    if(cl())CL.putTurtle(S.room,t);persist();closeModal();renderAll()};
   var d=$('#tdel');if(d)d.onclick=function(){if(!d.dataset.sure){d.dataset.sure=1;d.textContent='再按一次確認';return}
-    S.turtles=S.turtles.filter(function(x){return x.id!==t.id});Object.keys(S.logs[t.id]||{}).forEach(function(d){((S.logs[t.id][d].pics)||[]).forEach(delPic)});delete S.logs[t.id];S.active=S.turtles[0].id;persist();closeModal();renderAll();toast('已刪除')};
+    S.turtles=S.turtles.filter(function(x){return x.id!==t.id});Object.keys(S.logs[t.id]||{}).forEach(function(d){((S.logs[t.id][d].pics)||[]).forEach(delPic)});delete S.logs[t.id];if(cl())CL.delTurtle(S.room,t.id);S.active=S.turtles[0].id;persist();closeModal();renderAll();toast('已刪除')};
 }
 
 /* modal */
@@ -242,7 +246,7 @@ function paintWater(){$('#wY').className=cur.water?'on':''}
 var pend=null;
 function commit(){clearTimeout(tm);if(!pend)return;var p=pend;pend=null;
   if(!S.logs[p.id])S.logs[p.id]={};
-  S.logs[p.id][p.d]=p.e;
+  S.logs[p.id][p.d]=p.e;if(cl())CL.putLog(S.room,p.id,p.d,p.e);
   var ok=persist();
   $('#saved').textContent=ok?'已自動儲存 ✓ '+new Date().toLocaleTimeString('zh-HK',{hour:'2-digit',minute:'2-digit'}):'⚠️ 無法儲存到瀏覽器，請用右上角 💾 備份';
   renderShell(false);renderHist()}
@@ -264,8 +268,9 @@ $('#weight').oninput=function(){cur.weight=this.value===''?'':Math.max(0,+this.v
 var POOPS=['正常','偏軟','稀水','偏硬','異常','冇排便'],PC={},db=null;
 function idb(){return new Promise(function(res){if(db)return res(db);try{var r=indexedDB.open('turtlePics',1);r.onupgradeneeded=function(){r.result.createObjectStore('p')};r.onsuccess=function(){db=r.result;res(db)};r.onerror=function(){res(null)}}catch(e){res(null)}})}
 function putPic(id,data){return idb().then(function(d){return new Promise(function(res){if(!d)return res(false);try{var tx=d.transaction('p','readwrite');tx.objectStore('p').put(data,id);tx.oncomplete=function(){res(true)};tx.onerror=function(){res(false)}}catch(e){res(false)}})})}
-function getPic(id){if(PC[id])return Promise.resolve(PC[id]);return idb().then(function(d){return new Promise(function(res){if(!d)return res(null);try{var q=d.transaction('p').objectStore('p').get(id);q.onsuccess=function(){if(q.result)PC[id]=q.result;res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})})}
-function delPic(id){delete PC[id];idb().then(function(d){try{if(d)d.transaction('p','readwrite').objectStore('p').delete(id)}catch(e){}})}
+function getPic(id){return getLocal(id).then(function(r){if(r||!window.CL||!S.room)return r;return CL.getPic(S.room,id).then(function(d){if(d){PC[id]=d;putPic(id,d)}return d})})}
+function getLocal(id){if(PC[id])return Promise.resolve(PC[id]);return idb().then(function(d){return new Promise(function(res){if(!d)return res(null);try{var q=d.transaction('p').objectStore('p').get(id);q.onsuccess=function(){if(q.result)PC[id]=q.result;res(q.result||null)};q.onerror=function(){res(null)}}catch(e){res(null)}})})}
+function delPic(id){delete PC[id];if(cl())CL.delPic(S.room,id);idb().then(function(d){try{if(d)d.transaction('p','readwrite').objectStore('p').delete(id)}catch(e){}})}
 function shrink(file){return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(1,1000/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext('2d').drawImage(im,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.72))};im.onerror=rej;im.src=fr.result};fr.onerror=rej;fr.readAsDataURL(file)})}
 function paintPoop(){
   $('#poops').innerHTML=POOPS.map(function(p){return '<button class="tag'+(cur.poop===p?' on':'')+((p==='稀水'||p==='異常')?' bad':'')+'" data-p="'+p+'">'+p+'</button>'}).join('');
@@ -280,9 +285,50 @@ $('#file').onchange=function(){var fs=[].slice.call(this.files).slice(0,3-cur.pi
     if(ctx!==cur||ctx.pics.length>=3)return;
     var id='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     PC[id]=data;ctx.pics.push(id);paintPoop();touch();
-    putPic(id,data).then(function(ok){if(!ok)toast('相片可能無法長期保存')})
+    putPic(id,data).then(function(ok){if(!ok&&!cl())toast('相片可能無法長期保存')});if(cl())CL.putPic(S.room,id,data);
   },function(){toast('讀取相片失敗')})})};
 function cleanLogs(L){var r={};Object.keys(L||{}).forEach(function(id){r[id]={};var m=L[id]||{};Object.keys(m).forEach(function(d){if(!/^\d{4}-\d\d-\d\d$/.test(d))return;var e=m[d]||{};r[id][d]={feed:Math.max(0,Math.min(30,+e.feed||0)),amount:String(e.amount||'').slice(0,80),foods:(Array.isArray(e.foods)?e.foods:[]).filter(function(f){return FOODS.indexOf(f)>-1}),other:String(e.other||'').slice(0,80),sun:e.sun===true?true:e.sun===false?false:null,dur:e.dur===''||e.dur==null?'':Math.max(0,Math.min(600,+e.dur||0)),water:!!e.water,weight:e.weight===''||e.weight==null?'':Math.max(0,+e.weight||0),poop:POOPS.indexOf(e.poop)>-1?e.poop:'',pics:(Array.isArray(e.pics)?e.pics:[]).filter(function(p){return /^p[a-z0-9]+$/i.test(p)}).slice(0,3),note:String(e.note||'').slice(0,500),t:+e.t||0}})});return r}
+
+/* cloud sync */
+function cl(){return !!(window.CL&&S.room)}
+function sig(e){var c=cleanLogs({x:{'2000-01-01':e}}).x['2000-01-01'];c.t=0;return JSON.stringify(c)}
+function hashRoom(){var m=/[#&]r=([a-f0-9]{24,64})/.exec(location.hash);return m?m[1]:null}
+function badge(){var b=$('#syncBtn');b.style.borderColor=cl()?'var(--moss)':'var(--line)';b.style.boxShadow=cl()?'0 0 0 2px var(--moss)':'none'}
+function pushAll(){S.turtles.forEach(function(t,i){if(!t.ts)t.ts=1e12+i});persist();CL.pushAll(S.room,S.turtles,S.logs);
+  Object.keys(S.logs).forEach(function(id){Object.keys(S.logs[id]).forEach(function(d){((S.logs[id][d].pics)||[]).forEach(function(p){getLocal(p).then(function(x){if(x)CL.putPic(S.room,p,x)})})})})}
+function onRT(v){if(!v)return;
+  var a=Object.keys(v).map(function(id){var o=v[id]||{};return{id:id,name:String(o.name||'烏龜').slice(0,12),gender:['公','乸'].indexOf(o.gender)>-1?o.gender:'未知',ts:+o.ts||0}}).sort(function(x,y){return x.ts-y.ts});
+  if(!a.length||JSON.stringify(a)===JSON.stringify(S.turtles))return;
+  S.turtles=a;if(!a.some(function(t){return t.id===S.active}))S.active=a[0].id;persist();
+  var o=$('#ov');if(o&&o.dataset.lock)closeModal();renderAll()}
+function onRL(v){var nl=cleanLogs(v||{});
+  if(pend){nl[pend.id]=nl[pend.id]||{};nl[pend.id][pend.d]=pend.e}
+  S.logs=nl;persist();renderShell(false);renderHist();
+  if(!pend){var r=(nl[S.active]||{})[date]||blank();if(sig(r)!==sig(cur))fill()}}
+function startSync(){if(!cl())return;CL.ready.then(function(ok){if(!ok){toast('雲端登入失敗，請檢查 Firebase 匿名登入設定');return}CL.listen(S.room,onRT,onRL);badge()})}
+function createRoom(){var b=new Uint8Array(16);crypto.getRandomValues(b);
+  S.room=[].map.call(b,function(x){return ('0'+x.toString(16)).slice(-2)}).join('');persist();
+  CL.ready.then(function(ok){if(!ok){S.room=null;persist();return toast('雲端登入失敗，請先在 Firebase 啟用匿名登入')}
+    pushAll();CL.listen(S.room,onRT,onRL);badge();syncModal()})}
+function joinRoom(r){commit();CL.stop();S.room=r;S.turtles=[];S.logs={};S.active=null;persist();
+  history.replaceState(null,'',location.pathname+location.search);renderAll();toast('正在連接…');startSync();
+  setTimeout(function(){if(!S.turtles.length&&!$('#ov'))turtleModal(null,true)},6000)}
+function syncModal(){
+  if(!window.CL){modal('<h3>🔗 雙機同步</h3><p class="empty">未連接雲端。請把頁面放到 Firebase Hosting（或你自己的網站）後再使用。</p><div class="acts"><button class="btn alt" data-x>關閉</button></div>');return}
+  if(!S.room){modal('<h3>🔗 雙機同步</h3><p class="empty" style="margin-bottom:6px">建立後會顯示 QR Code，另一部手機用相機掃描就會加入，兩部手機即時共用烏龜、記錄同相片。</p><div class="acts"><button class="btn alt" data-x>取消</button><button class="btn" id="mk">建立同步</button></div>');$('#mk').onclick=createRoom;return}
+  var url=location.origin+location.pathname+'#r='+S.room;
+  modal('<h3>🔗 同步中</h3><div class="qr" id="qr"></div><p class="empty" style="text-align:center">用另一部手機的相機掃描，打開連結就會加入。<br>請勿把 QR Code 分享給不相關的人。</p><div class="acts"><button class="btn alt" id="lv">停止同步</button><button class="btn" id="cu">複製連結</button></div>');
+  try{var o=qrcode(0,'M');o.addData(url);o.make();$('#qr').innerHTML='<img alt="QR Code" src="'+o.createDataURL(6,3)+'">'}catch(e){$('#qr').textContent=url}
+  $('#cu').onclick=function(){copy(url,'已複製連結')};
+  $('#lv').onclick=function(){var b=$('#lv');if(!b.dataset.s){b.dataset.s=1;b.textContent='再按一次確認';return}CL.stop();S.room=null;persist();closeModal();badge();toast('已停止同步，資料保留在本機')}}
+$('#syncBtn').onclick=function(){commit();syncModal()};
+function boot(){var r=hashRoom();
+  if(r&&r!==S.room){var has=Object.keys(S.logs).some(function(k){return Object.keys(S.logs[k]).length});
+    if(!has)return joinRoom(r);
+    modal('<h3>加入同步？</h3><p class="empty" style="margin-bottom:10px">加入後，這部裝置目前的記錄會被另一部裝置的資料取代。建議先用 💾 備份。</p><div class="acts"><button class="btn alt" id="jn">取消</button><button class="btn" id="jy">加入</button></div>',true);
+    $('#jn').onclick=function(){history.replaceState(null,'',location.pathname+location.search);closeModal()};
+    $('#jy').onclick=function(){closeModal();joinRoom(r)};return}
+  startSync();badge()}
 
 /* date nav */
 function paintDate(){var td=today();$('#dlabel').textContent=date+'（週'+wd(date)+'）'+(date===td?' 今日':'');$('#next').disabled=date>=td}
@@ -314,7 +360,7 @@ function renderHist(){
     return '<div class="hist"><div class="b" data-d="'+d+'"><b>'+d+'（週'+wd(d)+'）</b><br><span>餵 '+(e.feed||0)+' 次'+(f?'・'+esc(f):'')+'・'+sunTxt(e)+(e.water?'・已換水':'')+(e.poop?'・糞便'+e.poop:'')+((e.pics&&e.pics.length)?'・📷'+e.pics.length:'')+(e.weight!==''&&e.weight!=null?'・'+e.weight+'g':'')+'</span></div><button class="x" data-del="'+d+'" aria-label="刪除">✕</button></div>'}).join(''):'<p class="empty">未有記錄。揀返上面日期，填第一筆就會喺度出現。</p>';
 }
 $('#hist').onclick=function(e){var x=e.target.closest('[data-del]');
-  if(x){if(x.dataset.sure){commit();var oe=S.logs[S.active][x.dataset.del];((oe&&oe.pics)||[]).forEach(delPic);delete S.logs[S.active][x.dataset.del];persist();renderAll();toast('已刪除記錄')}else{x.dataset.sure=1;x.textContent='確認?';x.style.color='var(--warn)'}return}
+  if(x){if(x.dataset.sure){commit();var oe=S.logs[S.active][x.dataset.del];((oe&&oe.pics)||[]).forEach(delPic);delete S.logs[S.active][x.dataset.del];if(cl())CL.delLog(S.room,S.active,x.dataset.del);persist();renderAll();toast('已刪除記錄')}else{x.dataset.sure=1;x.textContent='確認?';x.style.color='var(--warn)'}return}
   var b=e.target.closest('[data-d]');if(b){date=b.dataset.d;renderAll();window.scrollTo({top:0,behavior:'smooth'})}};
 
 /* report */
@@ -354,7 +400,7 @@ $('#bkBtn').onclick=function(){commit();
   modal('<h3>備份同匯入</h3><p class="empty" style="margin-bottom:10px">複製下面文字存起，換手機或清除瀏覽器資料後貼返入嚟就可以還原。匯入會覆蓋目前資料。相片只存在這部裝置，不包括在備份內。</p><textarea id="bk" style="min-height:140px;font-size:12px">'+esc(JSON.stringify({turtles:S.turtles,logs:S.logs}))+'</textarea><div class="acts"><button class="btn alt" id="bkc">複製</button><button class="btn" id="bki">匯入</button></div>');
   $('#bkc').onclick=function(){copy($('#bk').value,'已複製備份')};
   $('#bki').onclick=function(){try{var o=JSON.parse($('#bk').value);if(!Array.isArray(o.turtles)||!o.turtles.length||typeof o.logs!=='object')throw 0;
-    S.turtles=o.turtles.map(function(t){return{id:String(t.id),name:String(t.name||'烏龜'),gender:String(t.gender||'未知')}});S.logs=cleanLogs(o.logs);S.active=S.turtles[0].id;persist();closeModal();date=today();renderAll();toast('已匯入')}catch(e){toast('格式唔啱，匯入失敗')}}};
+    S.turtles=o.turtles.map(function(t){return{id:String(t.id),name:String(t.name||'烏龜'),gender:String(t.gender||'未知'),ts:+t.ts||Date.now()}});S.logs=cleanLogs(o.logs);S.active=S.turtles[0].id;persist();if(cl())pushAll();closeModal();date=today();renderAll();toast('已匯入')}catch(e){toast('格式唔啱，匯入失敗')}}};
 
 /* timers: daily 22:00 report, midnight rollover */
 function tick(){var n=new Date(),td=ymd(n);
@@ -367,7 +413,34 @@ document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preven
 document.addEventListener('focusin',function(e){var t=e.target;if(t.matches&&t.matches('input,textarea')&&!t.closest('.md'))setTimeout(function(){t.scrollIntoView({block:'center'})},300)});
 
 function renderAll(){commit();applyTheme();renderBar();paintDate();fill();renderShell(true);renderHist()}
-renderAll();if(!S.turtles.length)turtleModal(null,true);tick();
+renderAll();if(!S.turtles.length&&!hashRoom())turtleModal(null,true);tick();
+if(window.CL)boot();else window.addEventListener("cloudready",boot);
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getDatabase,ref,onValue,set,get,remove,update} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+const app=initializeApp({apiKey:"AIzaSyCK0UqkmJLdURORXA3viDimF7JEzFf0Jig",authDomain:"turtle-record-form.firebaseapp.com",databaseURL:"https://turtle-record-form-default-rtdb.firebaseio.com",projectId:"turtle-record-form",storageBucket:"turtle-record-form.firebasestorage.app",messagingSenderId:"170829291330",appId:"1:170829291330:web:5a06ff37ec7431eaaab2db"});
+const auth=getAuth(app),db=getDatabase(app);
+const ready=signInAnonymously(auth).then(()=>true).catch(e=>{console.error(e);return false});
+let un=[];
+const R=(r,p)=>ref(db,'rooms/'+r+'/'+p);
+const W=f=>(...a)=>ready.then(ok=>ok?f(...a):null).catch(e=>console.error(e));
+const clean=o=>JSON.parse(JSON.stringify(o));
+const tv=t=>({name:t.name,gender:t.gender,ts:t.ts||Date.now()});
+window.CL={ready,
+ listen(r,a,b){this.stop();const er=e=>console.error(e);un=[onValue(R(r,'turtles'),s=>a(s.val()),er),onValue(R(r,'logs'),s=>b(s.val()),er)]},
+ stop(){un.forEach(f=>f());un=[]},
+ putTurtle:W((r,t)=>set(R(r,'turtles/'+t.id),tv(t))),
+ delTurtle:W((r,id)=>Promise.all([remove(R(r,'turtles/'+id)),remove(R(r,'logs/'+id))])),
+ putLog:W((r,id,d,e)=>set(R(r,'logs/'+id+'/'+d),clean(e))),
+ delLog:W((r,id,d)=>remove(R(r,'logs/'+id+'/'+d))),
+ putPic:W((r,p,x)=>set(R(r,'pics/'+p),x)),
+ delPic:W((r,p)=>remove(R(r,'pics/'+p))),
+ getPic:(r,p)=>ready.then(ok=>ok?get(R(r,'pics/'+p)).then(s=>s.val()):null).catch(()=>null),
+ pushAll:W((r,ts,logs)=>{const u={};ts.forEach(t=>{u['turtles/'+t.id]=tv(t)});Object.keys(logs).forEach(id=>Object.keys(logs[id]).forEach(d=>{u['logs/'+id+'/'+d]=clean(logs[id][d])}));return update(ref(db,'rooms/'+r),u)})
+};
+window.dispatchEvent(new Event('cloudready'));
 </script>
 </body>
 </html>
